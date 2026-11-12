@@ -6,7 +6,7 @@
 
 ## 安装
 
-DSH 0.2.1-rc.1 至 0.2.x 的插件接口为目标；在隔离的真实 DSH 0.2.2-rc.1 宿主中做过加载和认证 API 冒烟。其他组合的验收状态见下文。运行新版 DSH 时以其自身 Node 要求为准。插件仅使用 JavaScript 和 JSON，无安装脚本或原生模块。生成小测试会调用你在 DSH 中配置的默认模型，产生相应模型用量；也可在插件配置中设置 `generatorProvider`、`generatorModel`。
+DSH 0.2.1-rc.1 至 0.2.x 的插件接口为目标；已在 Windows 的隔离 DSH 0.2.2-rc.1 Web profile 验证 `.tgz` 安装、正常启动、认证 API 和卸载。其他组合的验收状态见下文。运行新版 DSH 时以其自身 Node 要求为准。插件仅使用 JavaScript 和 JSON，无安装脚本或原生模块。生成小测试会调用你在 DSH 中配置的默认模型，产生相应模型用量；也可在插件配置中设置 `generatorProvider`、`generatorModel`。
 
 在实际运行会话的 DSH 宿主上安装本包，并重启宿主：
 
@@ -15,6 +15,22 @@ dsh plugin --profile web add <本包目录或 .tgz 路径>
 ```
 
 官方 Desktop 使用它自己的插件管理页，或用 Desktop 自带命令安装到 `desktop` profile。DSHA、DSH Go 手机本机引擎安装到其实际使用的 `web` profile；Whaleness 使用电脑宿主上的安装。安装到一个 profile 不会自动启用其他 profile。
+
+## 卸载与数据
+
+在安装插件的 DSH 宿主上，按实际使用的 profile 移除。例如 Web profile：
+
+```text
+dsh plugin --profile web remove dsh-attune
+```
+
+操作后重启该宿主。`dsh plugin` 会将命令交给 pnpm；普通 CLI 需要 pnpm 在 PATH 中。其他 profile 需将 `web` 换成实际名称。Windows 上已在 DSH 0.2.2-rc.1 的隔离 Web profile 验证安装与卸载。
+
+官方 Desktop 可使用应用中的插件管理页移除。使用命令行时，需先至少启动一次 Desktop 以初始化 profile，然后完全退出 Desktop；使用由 Desktop 安装的 `dsh` 命令运行 `dsh plugin --profile desktop remove dsh-attune`，再重新打开 Desktop。普通 npm 版 `dsh` 不能管理 Desktop profile；具体 Desktop 版本与本插件的实机操作仍待验。详见 [DSH 官方 CLI](https://github.com/deepseek-ai/deepseek-harness/blob/master/apps/cli/reference/README.md) 和 [Desktop 文档](https://github.com/deepseek-ai/deepseek-harness/blob/master/apps/desktop/README.md)。
+
+卸载插件不会自动删除偏好档案。默认文件为 `$DSH_HOME/storages/dsh-attune/state.json`；未设置 `DSH_HOME` 时，默认位于用户主目录的 `.dsh/storages/dsh-attune/state.json`。若配置过 `dataDir`，则位于该目录下的 `state.json`。如需彻底清除，请先停止使用同一档案的 DSH 宿主，核对实际路径后自行删除该插件数据；同一宿主上的其他 profile 可能共用它。
+
+
 
 ## 怎么用
 
@@ -50,7 +66,7 @@ dsh plugin --profile web add <本包目录或 .tgz 路径>
 
 各手机模式的依据和测试清单见 [DSH Go 与手机端接入](docs/dsh-go.md)。客户端界面是否会显示，取决于手机 App 所支持的插件 UI 协议；宿主能安装插件不等于原生 App 自动显示网页面板。
 
-隔离宿主没有配置模型密钥，因此真实 DSH 冒烟只验证到模型调用返回缺少密钥的明确错误；成功出题使用模拟 DSH 模型流验证。Windows 沙箱阻止了 DSH 内置 pnpm 写入其全局 store，真实宿主使用官方 `--patch` 载入本地插件，`.tgz` 尚未经过 `dsh plugin add` 的真实安装验收。
+Windows 的隔离 DSH 0.2.2-rc.1 Web profile 已通过 `.tgz` 安装、正常启动、认证状态 API 和卸载验证；没有配置模型密钥，生成接口验证到缺少密钥的明确错误，成功出题目前使用模拟 DSH 模型流验证。测试环境需将 pnpm store 指向工作区并使用 `--package-import-method copy`；pnpm 提示三个 peer 依赖缺失，但该宿主成功加载插件并响应接口。不同 DSH 版本和手机、官方 Desktop 的实机结果仍待验证。
 
 ## 数据与边界
 
