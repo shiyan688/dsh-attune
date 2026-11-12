@@ -8,10 +8,10 @@
 
 DSH 0.2.1-rc.1 至 0.2.x 的插件接口为目标；已在 Windows 的隔离 DSH 0.2.2-rc.1 Web profile 验证 `.tgz` 安装、正常启动、认证 API 和卸载。其他组合的验收状态见下文。运行新版 DSH 时以其自身 Node 要求为准。插件仅使用 JavaScript 和 JSON，无安装脚本或原生模块。生成小测试会调用你在 DSH 中配置的默认模型，产生相应模型用量；也可在插件配置中设置 `generatorProvider`、`generatorModel`。
 
-在实际运行会话的 DSH 宿主上安装本包，并重启宿主：
+在实际运行会话的 DSH 宿主上从 [npm](https://www.npmjs.com/package/dsh-attune) 安装本包，并重启宿主：
 
 ```text
-dsh plugin --profile web add <本包目录或 .tgz 路径>
+dsh plugin --profile web add dsh-attune@0.1.0
 ```
 
 官方 Desktop 使用它自己的插件管理页，或用 Desktop 自带命令安装到 `desktop` profile。DSHA、DSH Go 手机本机引擎安装到其实际使用的 `web` profile；Whaleness 使用电脑宿主上的安装。安装到一个 profile 不会自动启用其他 profile。
