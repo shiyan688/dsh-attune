@@ -2,6 +2,19 @@
   "name": "dsh-attune",
   "version": "0.1.0",
   "description": "Small preference experiments for DeepSeek Harness",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shiyan688/dsh-attune.git"
+  },
+  "homepage": "https://github.com/shiyan688/dsh-attune#readme",
+  "bugs": {
+    "url": "https://github.com/shiyan688/dsh-attune/issues"
+  },
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "preferences"
+  ],
   "type": "module",
   "main": "lib/index.js",
   "exports": {
