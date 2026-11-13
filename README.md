@@ -6,7 +6,7 @@
 
 ## 安装
 
-DSH 0.2.1-rc.1 至 0.2.x 的插件接口为目标；已在 Windows 的隔离 DSH 0.2.2-rc.1 Web profile 验证 `.tgz` 安装、正常启动、认证 API 和卸载。其他组合的验收状态见下文。运行新版 DSH 时以其自身 Node 要求为准。插件仅使用 JavaScript 和 JSON，无安装脚本或原生模块。生成小测试会调用你在 DSH 中配置的默认模型，产生相应模型用量；也可在插件配置中设置 `generatorProvider`、`generatorModel`。
+DSH 0.2.1-rc.1 至 0.2.x 的插件接口为目标。已在 Windows 和 Linux 的 DSH 0.2.2-rc.1 Web profile 验证 npm 安装和卸载，真模型测试见下文。运行新版 DSH 时以其自身 Node 要求为准。插件仅使用 JavaScript 和 JSON，无安装脚本或原生模块。生成小测试会调用你在 DSH 中配置的默认模型，产生相应模型用量；也可在插件配置中设置 `generatorProvider`、`generatorModel`。
 
 在实际运行会话的 DSH 宿主上从 [npm](https://www.npmjs.com/package/dsh-attune) 安装本包，并重启宿主：
 
@@ -58,7 +58,7 @@ dsh plugin --profile web remove dsh-attune
 
 | 入口 | 首版能力 | 验收状态 |
 |---|---|---|
-| DSH Web、官方 Desktop | 响应式卡片、规则管理、文字命令、上下文偏好 | 客户端与宿主接口测试通过；真实 DSH 0.2.2-rc.1 Web 的认证接口与模型调用路径冒烟通过，Desktop 应用待实机验收 |
+| DSH Web、官方 Desktop | 响应式卡片、规则管理、文字命令、上下文偏好 | Windows 和 Linux 已验证 npm 安装与卸载，Linux 已通过 DeepSeek 官方 API 出题和偏好流程实测，Desktop 应用待实机验收 |
 | DSH Go 手机本机 | 原生面板答题、确认、拒绝；文字命令纠正与删除；也可用 Web 界面 | 对照 DSH Go JSON Schema 和模拟桥接测试；真机待验 |
 | DSH Go SSH、中转 | 文字命令；网页岛仅在接入模式允许时使用 | 协议分析通过；真机待验 |
 | DSHA | 使用内置 DSH 的 Web 插件和文字命令 | 真机待验 |
@@ -66,7 +66,11 @@ dsh plugin --profile web remove dsh-attune
 
 各手机模式的依据和测试清单见 [DSH Go 与手机端接入](docs/dsh-go.md)。客户端界面是否会显示，取决于手机 App 所支持的插件 UI 协议；宿主能安装插件不等于原生 App 自动显示网页面板。
 
-Windows 的隔离 DSH 0.2.2-rc.1 Web profile 已通过 `.tgz` 安装、正常启动、认证状态 API 和卸载验证；没有配置模型密钥，生成接口验证到缺少密钥的明确错误，成功出题目前使用模拟 DSH 模型流验证。测试环境需将 pnpm store 指向工作区并使用 `--package-import-method copy`；pnpm 提示三个 peer 依赖缺失，但该宿主成功加载插件并响应接口。不同 DSH 版本和手机、官方 Desktop 的实机结果仍待验证。
+### H100 服务器实测
+
+从 npm 安装 `dsh-attune@0.1.0` 后，在 H100 服务器上用 Linux DSH Web（0.2.2-rc.1）连接 DeepSeek 官方 API，模型选用 `deepseek-flash`。讲解实验复现、审阅志愿者招募公告、处理投屏故障这三个情境各生成了一道二选一题，出题接口耗时分别为 1.9、2.2 和 2.7 秒。比如，演示时投屏突然黑屏，题目会问你想先拿到一个能立刻试的步骤，还是先定位原因。
+
+我核对了实际发给模型的聊天请求。答题后，插件先把结果存为候选，确认后的聊天请求才会带上这条偏好。把规则改成先用「蓝舟演示」开场、再举个例子后，模型用这个短语开场，并给出了具体例子。删除规则时选择忘记答题依据，规则和来源答案都从偏好档案里移除，新会话的请求也不再带上这条偏好。重复答题去重、拒绝候选和邀请冷却也通过了测试。
 
 ## 数据与边界
 
