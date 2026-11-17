@@ -8,7 +8,7 @@ const base = resolve('test')
 await mkdir(base, { recursive: true })
 
 function fakeGenerator({ context }) {
-  const [dimension = 'opening', title = '即时生成的小测试'] = context.split('|')
+  const [dimension = 'opening', title = '即时生成的小测试'] = (context || 'opening').split('|')
   const modes = { opening: ['conclusion', 'reasoning'], explain: ['example', 'definition'], ideas: ['bold', 'practical'] }[dimension] ?? ['compact', 'expanded']
   return { title, dimension, prompt: '就眼前这件事，哪一种帮助更贴合？', options: modes.map((mode, i) => ({
     id: i ? 'b' : 'a', mode, label: `${mode} 的方式`, detail: `同一场景的 ${mode} 表达`,
