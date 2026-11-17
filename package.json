@@ -1,7 +1,7 @@
 {
   "name": "dsh-attune",
-  "version": "0.1.0",
-  "description": "Small preference experiments for DeepSeek Harness",
+  "version": "0.2.1",
+  "description": "A little whale-maid companion that learns how you like to chat through playful, generated quizzes",
   "repository": {
     "type": "git",
     "url": "https://github.com/shiyan688/dsh-attune.git"
@@ -23,13 +23,14 @@
     "./cordis.patch.yml": "./cordis.patch.yml",
     "./package.json": "./package.json"
   },
-  "license": "MIT",
+  "license": "(MIT AND CC-BY-NC-SA-4.0)",
   "files": [
     "lib/",
     "docs/",
     "cordis.patch.yml",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "ASSETS-NOTICE.md"
   ],
   "scripts": {
     "test": "node --test test/*.test.mjs"

@@ -90,3 +90,79 @@ test('native generation failure remains visible in panel', async () => {
   assert.match(outcome.toast, /没有可用的测试生成模型/)
   assert.match(emitted.at(-1).question, /没有可用的测试生成模型/)
 })
+
+test('native tone questions use the tone topic and preserve explicit confirmation', async () => {
+  let panel
+  let request
+  const state = { proposals: [], rules: [] }
+  const tests = []
+  const engine = {
+    listTests: () => tests,
+    getState: async () => structuredClone(state),
+    generateTest: async (value) => {
+      request = value
+      const test = { id: 'tone1', topic: 'tone', title: '小鱼怎样开口', prompt: '哪种问法你听起来更舒服？', options: [
+        { id: 'a', label: '俏皮一点' }, { id: 'b', label: '平和一点' },
+      ] }
+      tests.push(test)
+      return { test }
+    },
+    answer: async () => {
+      state.proposals = [{ id: 'p1', topic: 'tone', status: 'pending', text: '默契题使用平和自然的语气', evidence: '小鱼怎样开口：平和一点' }]
+    },
+    decide: async ({ action }) => {
+      assert.equal(action, 'remember')
+      state.proposals = []
+      state.rules = [{ id: 'r1', topic: 'tone', text: '默契题使用平和自然的语气', evidence: ['小鱼怎样开口：平和一点'] }]
+    },
+  }
+  registerDshGo({ inject: (_names, callback) => callback({ dshGo: { panel: (_id, definition) => { panel = definition } } }) }, engine)
+  const oldView = panel.view({}, { locale: 'zh' })
+  assert.ok(oldView.children.some((node) => node.type === 'actions' && node.items.some((item) => item.action === 'generate-tone')))
+  const richView = panel.view({}, { locale: 'zh', components: ['form', 'textField'] })
+  assert.equal(richView.children.find((node) => node.submit === 'generate-tone').children[0].bind, 'data.form.toneContext')
+  const scope = { sessionId: 'tone-session' }
+  const emitted = []
+  const dispose = panel.data(scope, (value) => emitted.push(value), { locale: 'zh' })
+  await new Promise((resolve) => setImmediate(resolve))
+  assert.match(emitted.at(-1).companion, /了解你/)
+  const pending = panel.actions['generate-tone'](scope, { locale: 'zh', value: { values: { 'data.form.toneContext': '少用叠词' } } })
+  await pending.result(new AbortController().signal)
+  assert.equal(request.topic, 'tone')
+  assert.equal(request.context, '少用叠词')
+  assert.ok(emitted.some((value) => value.companion.includes('想一道')))
+  assert.match(emitted.at(-1).question, /^提问方式 · /)
+  assert.match(emitted.at(-1).companion, /小题送到/)
+  await panel.actions.choose(scope, { locale: 'zh', value: { value: 'b' } })
+  assert.equal(state.rules.length, 0)
+  assert.match(emitted.at(-1).proposal, /^提问方式 · /)
+  assert.match(emitted.at(-1).companion, /理解你/)
+  const blocked = panel.actions.generate(scope, { locale: 'zh' })
+  assert.match((await blocked.result(new AbortController().signal)).toast, /上一条/)
+  assert.equal(tests.length, 1)
+  await panel.actions.remember(scope, { locale: 'zh' })
+  assert.match(emitted.at(-1).ruleRows[0].subtitle, /^提问方式 · /)
+  assert.equal(panel.actions['edit-rule'](scope, { value: { ruleId: 'r1' } })[0].insert, '/attune correct r1 ')
+  assert.equal(panel.actions['delete-rule'](scope, { value: { ruleId: 'r1' } })[0].insert, '/attune delete r1')
+  dispose()
+})
+
+test('native cancelled generation releases its busy state for another question', async () => {
+  let panel
+  let calls = 0
+  const engine = {
+    listTests: () => [], getState: async () => ({ proposals: [], rules: [] }),
+    generateTest: async () => { calls++; return {} },
+  }
+  registerDshGo({ inject: (_names, callback) => callback({ dshGo: { panel: (_id, definition) => { panel = definition } } }) }, engine)
+  const scope = { sessionId: 'cancel-test' }
+  const first = panel.actions['generate-tone'](scope, { locale: 'zh' })
+  assert.match(panel.actions.generate(scope, { locale: 'zh' }).toast, /上一题/)
+  const cancelled = new AbortController()
+  cancelled.abort()
+  await first.result(cancelled.signal)
+  assert.equal(calls, 0)
+  const second = panel.actions.generate(scope, { locale: 'zh' })
+  await second.result(new AbortController().signal)
+  assert.equal(calls, 1)
+})

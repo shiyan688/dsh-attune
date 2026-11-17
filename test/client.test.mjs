@@ -51,6 +51,7 @@ test('Web client registers public slots and fetches under reverse-proxy mount', 
   const requested = mount('https://example.test/ui/')
   await new Promise((resolve) => setTimeout(resolve, 0))
   assert.deepEqual(requested, [
+    'https://example.test/ui/api/attune/appearance',
     'https://example.test/ui/api/attune/state',
     'https://example.test/ui/api/attune/tests',
   ])
@@ -60,6 +61,7 @@ test('Desktop carrier fetches through its own authenticated origin', async () =>
   const requested = mount('dsh-app://app/')
   await new Promise((resolve) => setTimeout(resolve, 0))
   assert.deepEqual(requested, [
+    'dsh-app://app/api/attune/appearance',
     'dsh-app://app/api/attune/state',
     'dsh-app://app/api/attune/tests',
   ])
@@ -69,6 +71,7 @@ test('opted-in page checks one nonblocking recommendation on opening', async () 
   const requested = mount('https://example.test/ui/', true)
   await new Promise((resolve) => setTimeout(resolve, 0))
   assert.deepEqual(requested, [
+    'https://example.test/ui/api/attune/appearance',
     'https://example.test/ui/api/attune/state',
     'https://example.test/ui/api/attune/tests',
     'https://example.test/ui/api/attune/invite',
@@ -167,4 +170,21 @@ test('optional situation text is sent to question generation and new test is sel
   assert.deepEqual(requested.filter((request) => request.url.endsWith('/generate')).map((request) => request.body), [{ context: '我在写小说' }])
   const after = renderWorkbench()
   assert.ok(find(after, (node) => node.type === 'h3' && node.props?.children?.[0] === 'A new situation'))
+})
+
+test('tone entry sends a tone topic and does not show ordinary question history', async () => {
+  const { renderWorkbench, find, requested } = mountInteractive({
+    initialState: { rules: [], proposals: [], settings: { invitationsEnabled: false } },
+    initialTests: [{ id: 'ordinary', title: 'Ordinary quiz', options: [] }],
+    generatedTest: { id: 'tone-1', topic: 'tone', title: 'How should I ask?', prompt: 'Which voice?', options: [] },
+  })
+  await new Promise(resolve => setTimeout(resolve, 0))
+  find(renderWorkbench(), node => node.props?.role === 'tab' && node.props.children[0] === 'tone').props.onClick()
+  await new Promise(resolve => setTimeout(resolve, 0))
+  const tonePage = renderWorkbench()
+  assert.equal(find(tonePage, node => node.props?.children?.[0] === 'Ordinary quiz'), null)
+  find(tonePage, node => node.props?.children?.[0] === 'toneGenerate').props.onClick()
+  await new Promise(resolve => setTimeout(resolve, 0))
+  assert.deepEqual(requested.filter(r => r.url.endsWith('/generate')).map(r => r.body), [{ context: '', topic: 'tone' }])
+  assert.ok(find(renderWorkbench(), node => node.type === 'h3' && node.props.children[0] === 'How should I ask?'))
 })

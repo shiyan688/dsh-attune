@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { DIMENSIONS, generateQuestion, parseQuestion, resolveModelRoute, validateQuestion } from '../lib/generator.js'
+import { DIMENSIONS, TONE_DIMENSIONS, generateQuestion, normalizeTopic, parseQuestion, resolveModelRoute, validateQuestion } from '../lib/generator.js'
 
 const sample = {
   title: '两位助手的开场',
@@ -75,4 +75,49 @@ test('resolves a configured model before the current DSH default', () => {
   const ctx = { get: () => ({ currentSelection: () => ({ provider: 'default', model: 'chat' }) }) }
   assert.deepEqual(resolveModelRoute(ctx, { provider: 'own', model: 'cheap' }), { provider: 'own', model: 'cheap' })
   assert.deepEqual(resolveModelRoute(ctx), { provider: 'default', model: 'chat' })
+})
+
+const toneSample = {
+  title: '小鱼该怎么开口',
+  prompt: '下午闲下来想玩一道题，你更想听见小鱼用哪种方式邀请你？',
+  dimension: 'quiz-tone',
+  options: [
+    { mode: 'playful', label: '轻巧俏皮一点', detail: '我捞到一个有趣的问题，要一起拆开看看吗？', rule: '默契小实验提问时，用轻巧俏皮的语气邀请我。' },
+    { mode: 'calm', label: '温柔平静一点', detail: '现在有空的话，要一起玩一道小测试吗？', rule: '默契小实验提问时，用温柔平静的语气邀请我。' },
+  ],
+}
+
+test('tone and collaboration dimensions cannot cross requested topics', () => {
+  const result = validateQuestion(toneSample, 'tone')
+  assert.equal(result.topic, 'tone')
+  assert.ok(TONE_DIMENSIONS[result.dimension])
+  assert.throws(() => validateQuestion(toneSample), /不支持的偏好维度/)
+  assert.throws(() => validateQuestion(sample, 'tone'), /不支持的偏好维度/)
+  assert.throws(() => validateQuestion({ ...sample, dimension: 'constructor' }), /不支持的偏好维度/)
+  for (const topic of [null, {}, '', 'personality']) assert.throws(() => normalizeTopic(topic), /主题/)
+})
+
+test('confirmed question style is sent separately and applied to either generation topic', async () => {
+  for (const topic of ['tone', 'preference']) {
+    let request
+    const result = await generateQuestion({
+      llm: fakeLlm(JSON.stringify(topic === 'tone' ? toneSample : sample), (value) => { request = value }),
+      route: { provider: 'fake', model: 'fake-model' }, topic,
+      questionStyleRules: ['默契小实验提问时，语气简洁温柔，称呼我为你。'],
+      confirmedRules: ['讨论方案时，先给结论。'],
+    })
+    const input = JSON.parse(request.messages[0].content[0].text)
+    assert.equal(input.topic, topic)
+    assert.deepEqual(input.confirmedQuestionStyle, ['默契小实验提问时，语气简洁温柔，称呼我为你。'])
+    assert.deepEqual(input.confirmedPreferences, ['讨论方案时，先给结论。'])
+    assert.equal(result.topic, topic)
+    assert.ok(request.system.includes('不默认称呼“主人”'))
+    assert.ok(request.system.includes('不把测验设为获得帮助的前提'))
+  }
+})
+
+test('tone generation rejects a collaboration question from the model', async () => {
+  await assert.rejects(generateQuestion({
+    llm: fakeLlm(JSON.stringify(sample)), route: { provider: 'fake', model: 'fake-model' }, topic: 'tone',
+  }), /不支持的偏好维度/)
 })

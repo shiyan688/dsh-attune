@@ -1,0 +1,47 @@
+{
+  "license": "CC-BY-NC-SA-4.0",
+  "attribution": "SlimeNull · Chubby Whale / Chubby Whale contributors",
+  "upstreamCommit": "350b2c4430bc9695f65b82f4747e65309869209b",
+  "sprites": {
+    "idle": {
+      "file": "maid-idle.webp",
+      "upstream": "https://media.githubusercontent.com/media/SlimeNull/ChubbyWhale/350b2c4430bc9695f65b82f4747e65309869209b/skins/standard/sprites/idle.webp",
+      "bytes": 72134,
+      "sha256": "96c144beb9fba6a579c6bdc1c59e4ddf17287f7cdc3e56156bad95071f2bb7b4",
+      "dimensions": [
+        454,
+        532
+      ]
+    },
+    "blink": {
+      "file": "maid-blink.webp",
+      "upstream": "https://media.githubusercontent.com/media/SlimeNull/ChubbyWhale/350b2c4430bc9695f65b82f4747e65309869209b/skins/standard/sprites/idle_blink.webp",
+      "bytes": 71150,
+      "sha256": "70dc7ceb07f7e8c64db7041651e0ef12d20daa723283f21f05ee418368350153",
+      "dimensions": [
+        454,
+        532
+      ]
+    },
+    "happy": {
+      "file": "maid-happy.webp",
+      "upstream": "https://media.githubusercontent.com/media/SlimeNull/ChubbyWhale/350b2c4430bc9695f65b82f4747e65309869209b/skins/standard/sprites/happy.webp",
+      "bytes": 75750,
+      "sha256": "5015b011c3cdbd4a34d51ac146b316633506e6181d259e67841e3b452729e9a7",
+      "dimensions": [
+        507,
+        526
+      ]
+    },
+    "curious": {
+      "file": "maid-curious.webp",
+      "upstream": "https://media.githubusercontent.com/media/SlimeNull/ChubbyWhale/350b2c4430bc9695f65b82f4747e65309869209b/skins/standard/sprites/curious.webp",
+      "bytes": 77276,
+      "sha256": "de0a08c2607c6a0f6d1b87497ceb10f5a0af6afac6a849c920f1de782873d001",
+      "dimensions": [
+        471,
+        557
+      ]
+    }
+  }
+}
