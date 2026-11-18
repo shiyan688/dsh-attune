@@ -1,5 +1,7 @@
 # 定制自己的桌宠形象
 
+[English](custom-appearance.en.md)
+
 0.2.1 开放了自定义形象上传。在默契小屋的「默契小本本」里打开「定制形象」，可以给角落桌宠和测试小屋换上自己的角色。
 
 ![上传自己的待机、思考与开心形象](images/custom-appearance.jpg)
