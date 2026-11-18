@@ -71,6 +71,27 @@ test('reports an unavailable model instead of pretending a fixed question is gen
   await assert.rejects(generateQuestion({ llm: fakeLlm('{}'), route: null }), /默认模型/)
 })
 
+test('selected text and feedback go to the model as review data, without surrounding conversation', async () => {
+  let request
+  const excerpt = '用户：我想聊聊新点子。\n助手：下面是一份排期。'
+  const feedback = '我还没想好要做什么。'
+  const question = await generateQuestion({
+    llm: fakeLlm(JSON.stringify({ ...sample, suggestedPersonaIds: ['execution', 'unknown'] }), (value) => { request = value }),
+    route: { provider: 'fake', model: 'fake-model' },
+    context: '不应发送的其他会话内容',
+    review: { excerpt, feedback, usedDimensions: ['ideas'] },
+    personas: [{ id: 'execution', name: '执行搭子', when: '用户准备推进任务' }],
+  })
+  const input = JSON.parse(request.messages[0].content[0].text)
+  assert.equal(input.selectedExcerpt, excerpt)
+  assert.equal(input.feedback, feedback)
+  assert.equal(Object.hasOwn(input, 'situation'), false)
+  assert.equal(input.allowedDimensions.includes('ideas'), false)
+  assert.deepEqual(question.suggestedPersonaIds, ['execution'])
+  assert.deepEqual(input.availablePersonas.map((persona) => persona.id), ['execution'])
+  assert.match(request.system, /供分析的材料/)
+})
+
 test('resolves a configured model before the current DSH default', () => {
   const ctx = { get: () => ({ currentSelection: () => ({ provider: 'default', model: 'chat' }) }) }
   assert.deepEqual(resolveModelRoute(ctx, { provider: 'own', model: 'cheap' }), { provider: 'own', model: 'cheap' })

@@ -73,6 +73,60 @@ test('optional DSH Go service does not block ordinary hosts', () => {
   registerDshGo({}, { listTests: () => [] })
 })
 
+test('native excerpt form submits the selected text separately from an ordinary situation', async () => {
+  const excerpt = '我想和你聊聊这个项目。\n助手立刻生成了一份任务表。'
+  const feedback = '想先把需求说清楚。'
+  let panel
+  let received
+  registerDshGo({ inject: (_names, callback) => callback({
+    dshGo: { panel: (_id, definition) => { panel = definition } },
+  }) }, {
+    getState: async () => ({ proposals: [] }),
+    listTests: () => [],
+    generateTest: async (request) => { received = request; return { test: { id: 'review' } } },
+  })
+  const view = panel.view({}, { locale: 'zh', components: ['form', 'textField'] })
+  const form = view.children.find((item) => item.submit === 'generate-excerpt')
+  assert.ok(form)
+  const action = panel.actions[form.submit]({ sessionId: 'excerpt-session' }, {
+    locale: 'zh', value: { values: { [form.children[0].bind]: excerpt, [form.children[1].bind]: feedback } },
+  })
+  assert.equal((await action.result(new AbortController().signal)).toast, '新题来了。')
+  assert.deepEqual(received.review, { excerpt, feedback })
+  assert.equal(Object.hasOwn(received, 'context'), false)
+})
+
+test('native persona rows confirm a single preference for multiple personas', async () => {
+  let panel
+  const emitted = []
+  const scoped = {
+    id: 'scoped', text: '先聊目前的想法。', status: 'pending', topic: 'preference',
+    suggestedPersonaIds: ['ideas'],
+  }
+  let accepted
+  registerDshGo({ inject: (_names, callback) => callback({
+    dshGo: { panel: (_id, definition) => { panel = definition } },
+  }) }, {
+    getState: async () => ({
+      proposals: accepted ? [] : [scoped],
+      personas: [{ id: 'ideas', name: '点子搭子' }, { id: 'review', name: '评审搭子' }],
+    }),
+    listTests: () => [],
+    decide: async (result) => { accepted = result },
+  })
+  const scope = { sessionId: 'scoped-quiz' }
+  const dispose = panel.data(scope, (data) => emitted.push(data), { locale: 'zh' })
+  await new Promise((resolve) => setImmediate(resolve))
+  assert.equal(emitted.at(-1).personaRows.find((row) => row.title.includes('点子搭子')).title, '✓ 点子搭子')
+  const select = emitted.at(-1).personaRows.find((row) => row.title.includes('评审搭子')).action
+  await panel.actions[select.id](scope, { locale: 'zh', value: select.args })
+  const save = emitted.at(-1).personaRows.find((row) => row.action.id === 'remember-scoped').action
+  await panel.actions[save.id](scope, { locale: 'zh', value: save.args })
+  assert.deepEqual(accepted.personaIds, ['ideas', 'review'])
+  assert.equal(emitted.at(-1).personaRows.length, 0)
+  dispose()
+})
+
 test('native generation failure remains visible in panel', async () => {
   let panel
   const engine = {

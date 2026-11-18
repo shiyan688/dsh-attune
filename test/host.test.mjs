@@ -38,7 +38,7 @@ test('authenticated Connection routes expose a bounded JSON flow on any admitted
   const engine = fakeEngine()
   const routes = new Map()
   registerApi(context('connection', { fetch: { register: (entry) => { routes.set(entry.path, entry); return () => {} } } }), engine)
-  assert.equal(routes.size, 7)
+  assert.equal(routes.get('/api/attune/persona').requestBody, 'streaming')
   assert.equal(routes.get('/api/attune/answer').requestBody, 'streaming')
   const request = new Request('https://example.org/ui/api/attune/answer', {
     method: 'POST',
@@ -58,6 +58,31 @@ test('authenticated Connection routes expose a bounded JSON flow on any admitted
     method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ pad: 'x'.repeat(33000) }),
   }))
   assert.equal(tooBig.status, 400)
+})
+
+test('review requests through Web and slash command pass only the supplied excerpt', async () => {
+  const calls = []
+  const engine = {
+    generateTest: async (args) => {
+      calls.push(args)
+      return { test: { id: 'review', title: '怎么开场', prompt: '你更喜欢怎样回复？', options: [] } }
+    },
+  }
+  const routes = new Map()
+  registerApi(context('connection', { fetch: { register: (entry) => routes.set(entry.path, entry) } }), engine)
+  const excerpt = '用户：让我想一想。\n助手：这里是计划。'
+  const feedback = '我希望有时间把想法说完整。'
+  const response = await routes.get('/api/attune/generate').fetch(new Request('https://example.org/api/attune/generate', {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ review: { excerpt, feedback }, context: '其他对话内容' }),
+  }))
+  assert.equal(response.status, 200)
+  assert.deepEqual(calls[0].review, { excerpt, feedback })
+  assert.equal(Object.hasOwn(calls[0], 'context'), false)
+  assert.match(await executeAttuneCommand(engine, `excerpt ${excerpt}`, {
+    contextForTest: () => assert.fail('Excerpt generation must not read other conversation context'),
+  }), /怎么开场/)
+  assert.deepEqual(calls[1].review, { excerpt })
 })
 
 test('prompt provider reads corrected preferences on the next assembly', () => {

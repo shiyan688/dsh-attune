@@ -1,6 +1,6 @@
 {
   "name": "dsh-attune",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "A little whale-maid companion that learns how you like to chat through playful, generated quizzes",
   "repository": {
     "type": "git",

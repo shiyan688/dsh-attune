@@ -78,11 +78,12 @@ test('opted-in page checks one nonblocking recommendation on opening', async () 
   ])
 })
 
-function mountInteractive({ initialState, initialTests, generatedTest }) {
+function mountInteractive({ initialState, initialTests, generatedTest, openInitially = true, touch = false, selection = null }) {
   let client
   const registered = new Map()
   const instances = new Map()
   const requested = []
+  const documentListeners = new Map()
   let tests = initialTests
   let currentHooks = []
   let hookIndex = 0
@@ -94,12 +95,29 @@ function mountInteractive({ initialState, initialTests, generatedTest }) {
       if (!(index in hooks)) hooks[index] = initial
       return [hooks[index], (next) => { hooks[index] = typeof next === 'function' ? next(hooks[index]) : next }]
     },
-    useEffect: (effect) => { effect() },
-    useRef: (value) => ({ current: value }),
+    useEffect: (effect, dependencies) => {
+      const index = hookIndex++
+      const previous = currentHooks[index]
+      if (dependencies && previous && dependencies.length === previous.dependencies?.length &&
+          dependencies.every((item, i) => Object.is(item, previous.dependencies[i]))) return
+      previous?.cleanup?.()
+      currentHooks[index] = { dependencies, cleanup: effect() }
+    },
+    useRef: (value) => {
+      const index = hookIndex++
+      return currentHooks[index] ??= { current: value }
+    },
   }
   runInNewContext(source, {
-    window: { __ModuleLoader__: { load: ({ factory }) => { client = factory(() => React) } } },
-    document: { baseURI: 'https://example.test/ui/' }, URL, queueMicrotask,
+    window: {
+      __ModuleLoader__: { load: ({ factory }) => { client = factory(() => React) } },
+      matchMedia: () => ({ matches: touch }), innerWidth: 950, innerHeight: 700,
+    },
+    document: {
+      baseURI: 'https://example.test/ui/',
+      addEventListener: (name, callback) => documentListeners.set(name, callback),
+      getSelection: () => selection,
+    }, URL, queueMicrotask,
     fetch: async (url, options) => {
       requested.push({ url: String(url), body: options?.body ? JSON.parse(options.body) : null })
       const result = url.endsWith('/tests') ? tests : url.endsWith('/generate') ? { test: generatedTest } : initialState
@@ -127,12 +145,61 @@ function mountInteractive({ initialState, initialTests, generatedTest }) {
     }
     return null
   }
-  render(registered.get('sidebar.footer.action')({}), 'entry').props.onClick()
+  if (openInitially) render(registered.get('sidebar.footer.action')({}), 'entry').props.onClick()
   const overlay = registered.get('shell.overlay')({})
   const renderWorkbench = () => render(overlay, 'overlay')
   renderWorkbench()
-  return { renderWorkbench, find, requested }
+  return { renderWorkbench, find, requested, documentListeners }
 }
+
+test('desktop and touch selections open an editable excerpt and only send it on Generate', async () => {
+  for (const touch of [false, true]) {
+    const original = '我想聊一个点子。\n助手马上开始列排期。'
+    const surface = { contains: () => true }
+    const target = { nodeType: 1, closest: (selector) => selector.includes('data-chat-flow') ? surface : null }
+    const rect = { left: 20, right: 160, top: 40, bottom: 70 }
+    const selection = {
+      isCollapsed: false, rangeCount: 1, toString: () => original, removeAllRanges() {},
+      getRangeAt: () => ({ startContainer: target, endContainer: target, getBoundingClientRect: () => rect, getClientRects: () => [rect] }),
+    }
+    const { renderWorkbench, find, requested, documentListeners } = mountInteractive({
+      initialState: { rules: [], proposals: [], settings: { invitationsEnabled: true } },
+      initialTests: [], generatedTest: { id: 'excerpt-1', dimension: 'ideas', title: '先聊什么', options: [] },
+      openInitially: false, touch, selection,
+    })
+    if (touch) {
+      documentListeners.get('selectionchange')()
+    } else {
+      let intercepted = false
+      const event = { target, clientX: 30, clientY: 50, pointerType: 'mouse', preventDefault: () => { intercepted = true } }
+      documentListeners.get('contextmenu')({ ...event, clientX: 200 })
+      assert.equal(intercepted, false)
+      documentListeners.get('contextmenu')(event)
+      assert.equal(intercepted, true)
+    }
+    find(renderWorkbench(), (node) => node.props?.className === 'at-selection-action').props.onClick()
+    renderWorkbench()
+    await new Promise((resolve) => setImmediate(resolve))
+    const draft = renderWorkbench()
+    const input = find(draft, (node) => node.props?.id === 'dsh-attune-excerpt')
+    assert.equal(input.props.value, original)
+    assert.ok(!requested.some(({ url }) => url.endsWith('/generate') || url.endsWith('/invite')))
+    input.props.onChange({ target: { value: '讨论点子时，助手马上开始列排期。' } })
+    await new Promise((resolve) => setImmediate(resolve))
+    const generate = find(renderWorkbench(), (node) => node.props?.children?.[0] === 'generate' && node.props.onClick)
+    generate.props.onClick()
+    await new Promise((resolve) => setImmediate(resolve))
+    const { groupId, ...review } = requested.find(({ url }) => url.endsWith('/generate')).body.review
+    assert.match(groupId, /^[\w-]{12,96}$/)
+    assert.deepEqual(review, { excerpt: '讨论点子时，助手马上开始列排期。', feedback: '', usedDimensions: [] })
+    const next = find(renderWorkbench(), (node) => node.props?.children?.[0] === 'excerptNext' && node.props.onClick)
+    assert.ok(next)
+    next.props.onClick()
+    await new Promise((resolve) => setImmediate(resolve))
+    assert.deepEqual(requested.filter(({ url }) => url.endsWith('/generate')).at(-1).body.review.usedDimensions, ['ideas'])
+    assert.equal(requested.filter(({ url }) => url.endsWith('/generate')).at(-1).body.review.groupId, groupId)
+  }
+})
 
 test('switching tests keeps an unresolved candidate visible', async () => {
   const { renderWorkbench, find } = mountInteractive({
@@ -148,6 +215,30 @@ test('switching tests keeps an unresolved candidate visible', async () => {
   await new Promise((resolve) => setTimeout(resolve, 0))
   const after = renderWorkbench()
   assert.ok(find(after, (node) => node.type === 'textarea' && node.props?.value === 'Prefer an example first'))
+})
+
+test('a selected-excerpt candidate sends the edited text and all selected personas in one confirmation', async () => {
+  const initialState = {
+    rules: [],
+    proposals: [{ id: 'excerpt-proposal', topic: 'preference', dimension: 'ideas', text: '先听我把点子说完。', suggestedPersonaIds: ['ideas'] }],
+    personas: [{ id: 'ideas', name: '点子搭子' }, { id: 'review', name: '评审搭子' }],
+    settings: { invitationsEnabled: false },
+  }
+  const { renderWorkbench, find, requested } = mountInteractive({ initialState, initialTests: [] })
+  await new Promise((resolve) => setImmediate(resolve))
+  const draft = renderWorkbench()
+  const picker = find(draft, (node) => node.props?.title === 'rememberFor')
+  assert.deepEqual(Array.from(picker.props.ids), ['ideas'])
+  picker.props.onChange(['ideas', 'review'])
+  find(draft, (node) => node.type === 'textarea' && node.props?.['aria-label'] === 'learned')
+    .props.onChange({ target: { value: '先陪我聊完整，再开始评估。' } })
+  await new Promise((resolve) => setImmediate(resolve))
+  find(renderWorkbench(), (node) => node.props?.children?.[0] === 'remember' && node.props.onClick).props.onClick()
+  await new Promise((resolve) => setImmediate(resolve))
+  assert.deepEqual(requested.find(({ url }) => url.endsWith('/proposal')).body, {
+    proposalId: 'excerpt-proposal', action: 'remember', personaIds: ['ideas', 'review'],
+    replaceRuleIds: [], text: '先陪我聊完整，再开始评估。',
+  })
 })
 
 test('optional situation text is sent to question generation and new test is selected', async () => {

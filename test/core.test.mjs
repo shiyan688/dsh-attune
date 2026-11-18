@@ -56,6 +56,22 @@ test('generated question, confirm, correct, delete and forget form a complete lo
   assert.equal(duplicate.proposal, null)
 }))
 
+test('excerpt quizzes reject repeated dimensions and never store the source excerpt', async () => fixture(async (engine, dir) => {
+  const excerpt = '选段里的独有文字：在讨论新点子时，助手把话题带到了实施计划。'
+  const feedback = '还没有把我的想法听完整。'
+  const { test: question } = await engine.generateTest({ review: { excerpt, feedback } })
+  await assert.rejects(engine.generateTest({ review: { excerpt, feedback, usedDimensions: [question.dimension] } }), /维度重复/)
+  await assert.rejects(engine.generateTest({ review: { excerpt: '字'.repeat(3001) } }), /太长/)
+  assert.equal(engine.listTests().length, 1)
+  const { proposal } = await engine.answer({ testId: question.id, optionId: 'a', submissionId: 'excerpt-test' })
+  assert.equal(engine.promptFor(), '')
+  await engine.decide({ proposalId: proposal.id, action: 'remember' })
+  assert.match(engine.promptFor(), /conclusion/)
+  const saved = await readFile(join(dir, 'state.json'), 'utf8')
+  assert.equal(saved.includes(excerpt), false)
+  assert.equal(saved.includes(feedback), false)
+}))
+
 test('semantic modes reinforce or challenge preference across generated tests', async () => fixture(async (engine) => {
   const first = await ask(engine, 'opening|场景一')
   const answer = await engine.answer({ testId: first.id, optionId: 'a', submissionId: 's1' })
