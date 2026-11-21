@@ -1,6 +1,6 @@
 {
   "name": "dsh-attune",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "A little whale-maid companion that learns how you like to chat through playful, generated quizzes",
   "repository": {
     "type": "git",
@@ -26,6 +26,7 @@
   "license": "(MIT AND CC-BY-NC-SA-4.0)",
   "files": [
     "lib/",
+    "lib/native/AttuneDesktop.exe",
     "docs/",
     "cordis.patch.yml",
     "README.md",
@@ -33,6 +34,7 @@
     "ASSETS-NOTICE.md"
   ],
   "scripts": {
+    "build:desktop": "powershell -File desktop/windows/build.ps1",
     "test": "node --test test/*.test.mjs"
   },
   "engines": {

@@ -78,7 +78,10 @@ test('opted-in page checks one nonblocking recommendation on opening', async () 
   ])
 })
 
-function mountInteractive({ initialState, initialTests, generatedTest, openInitially = true, touch = false, selection = null }) {
+function mountInteractive({
+  initialState, initialTests, generatedTest, openInitially = true, touch = false, selection = null,
+  baseURI = 'https://example.test/ui/', desktop,
+}) {
   let client
   const registered = new Map()
   const instances = new Map()
@@ -111,15 +114,17 @@ function mountInteractive({ initialState, initialTests, generatedTest, openIniti
   runInNewContext(source, {
     window: {
       __ModuleLoader__: { load: ({ factory }) => { client = factory(() => React) } },
+      location: new URL(baseURI),
       matchMedia: () => ({ matches: touch }), innerWidth: 950, innerHeight: 700,
     },
     document: {
-      baseURI: 'https://example.test/ui/',
+      baseURI,
       addEventListener: (name, callback) => documentListeners.set(name, callback),
       getSelection: () => selection,
-    }, URL, queueMicrotask,
+    }, URL, queueMicrotask, AbortController, setTimeout, clearTimeout,
     fetch: async (url, options) => {
       requested.push({ url: String(url), body: options?.body ? JSON.parse(options.body) : null })
+      if (desktop && new URL(url).pathname.startsWith('/api/attune/desktop')) return desktop(new URL(url), options)
       const result = url.endsWith('/tests') ? tests : url.endsWith('/generate') ? { test: generatedTest } : initialState
       if (url.endsWith('/generate')) tests = [...tests, generatedTest]
       return { ok: true, json: async () => result }
@@ -149,8 +154,41 @@ function mountInteractive({ initialState, initialTests, generatedTest, openIniti
   const overlay = registered.get('shell.overlay')({})
   const renderWorkbench = () => render(overlay, 'overlay')
   renderWorkbench()
-  return { renderWorkbench, find, requested, documentListeners }
+  const unmount = () => {
+    for (const hooks of instances.values()) for (const hook of hooks) hook?.cleanup?.()
+  }
+  return { renderWorkbench, find, requested, documentListeners, unmount }
 }
+
+test('enabled native pet reopens the quiz in the existing Desktop window', async (t) => {
+  let notify
+  const { renderWorkbench, find, requested, unmount } = mountInteractive({
+    baseURI: 'dsh-app://app/', initialTests: [], initialState: { rules: [], proposals: [] },
+    desktop: (url, options) => {
+      if (url.pathname.endsWith('/visibility')) {
+        assert.equal(options.headers['x-attune-desktop'], '1')
+        assert.deepEqual(JSON.parse(options.body), { visible: true })
+        return Response.json({ supported: true, mode: 'starting', revision: 1, quiz: 0 })
+      }
+      if (!url.search) return Response.json({ supported: true, mode: 'off', revision: 0, quiz: 0 })
+      if (url.searchParams.get('after') === '0') return new Promise((resolve) => { notify = resolve })
+      return new Promise((resolve) => options.signal.addEventListener('abort', resolve, { once: true }))
+    },
+  })
+  t.after(unmount)
+  await new Promise((resolve) => setImmediate(resolve))
+  const open = renderWorkbench()
+  await find(open, (node) => node.props?.children?.[0] === 'desktopPetShow').props.onClick()
+  assert.ok(requested.some(({ url }) => url === 'dsh-app://app/api/attune/desktop/visibility'))
+  find(open, (node) => node.props?.className === 'at-close').props.onClick()
+  assert.equal(find(renderWorkbench(), (node) => node.props?.role === 'dialog'), null)
+  assert.equal(find(renderWorkbench(), (node) => node.type === 'img'), null)
+  notify(Response.json({ supported: true, mode: 'shown', revision: 3, quiz: 1 }))
+  await new Promise((resolve) => setImmediate(resolve))
+  const reopened = renderWorkbench()
+  assert.ok(find(reopened, (node) => node.props?.role === 'dialog'))
+  assert.ok(find(reopened, (node) => node.props?.role === 'tab' && node.props['aria-selected'] && node.props.children[0] === 'play'))
+})
 
 test('desktop and touch selections open an editable excerpt and only send it on Generate', async () => {
   for (const touch of [false, true]) {

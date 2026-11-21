@@ -4,7 +4,13 @@
 
 **Help DeepSeek Harness learn how you like to be answered, one quick quiz at a time.**
 
-Open Attune from the sidebar or tap the little whale maid in your DSH window. The model you have configured in DSH makes up a question for the moment. You choose an answer, edit what Attune thinks it learned, and decide whether to save it. Saved preferences can guide future replies, and you can correct or remove them in **My preferences**.
+Open Attune from the DeepSeek Harness sidebar or from its Windows desktop pet's right-click menu. The model you have configured in DSH makes up a question for the moment. You choose an answer, edit what Attune thinks it learned, and decide whether to save it. Saved preferences can guide future replies, and you can correct or remove them in **My preferences**.
+
+## Windows desktop pet
+
+The pet floats on the Windows desktop and can be dragged out of the way. Double-click it to return to DeepSeek Harness. Right-click to check your DeepSeek balance, take a quiz, check for plugin updates, or toggle occasional speech bubbles. The price badge compares DeepSeek Flash output rates in CNY and highlights the active Beijing-time period. [Desktop pet guide](docs/desktop-companion.md)
+
+![Windows desktop pet showing the current off-peak DeepSeek Flash rate](docs/images/desktop-pet-040.jpg)
 
 ## What would you rather hear?
 
@@ -22,7 +28,7 @@ Some quizzes simply ask whether you want the conclusion up front or the reasonin
 Install [dsh-attune from npm](https://www.npmjs.com/package/dsh-attune) on the host that runs your DSH session, then restart that host. The package targets the DSH plugin API from 0.2.1-rc.1 through 0.2.x. For the Web profile, run:
 
 ```sh
-dsh plugin --profile web add dsh-attune@0.3.0
+dsh plugin --profile web add dsh-attune@0.4.0
 ```
 
 - **Official Desktop** has its own plugin manager and `desktop` profile. Use the in-app manager or the `dsh` command supplied by Desktop.
@@ -85,13 +91,13 @@ Use `/attune on` to allow occasional quiz recommendations when you open Attune, 
 | Client | Attune entry points | Verification |
 | --- | --- | --- |
 | DSH Web | Responsive panel, in-window companion, and slash commands | npm install and removal checked on Windows and Linux with DSH 0.2.2-rc.1. Quiz and preference flow exercised on Linux with the official DeepSeek API. |
-| Official DSH Desktop | Standard Web plugin UI and slash commands through the Desktop profile | Desktop app testing is pending. |
+| Official DSH Desktop | Attune sidebar, slash commands and a Windows desktop pet | The Windows pet was verified to load in Desktop 0.2.2-rc.5. |
 | DSH Go, local engine | Native panel when the bridge is available, plus Web and slash-command options | Panel schema and a simulated bridge tested. Physical-device testing is pending. |
 | DSH Go, SSH or relay | Slash commands. The Web panel depends on the connection mode. | Protocol reviewed. Physical-device testing is pending. |
 | DSHA | Standard Web UI and commands in its bundled DSH engine | Physical-device testing is pending. |
 | Whaleness for Android and iOS | Host-provided slash commands through Mobile Gateway | Gateway and App testing is pending. |
 
-See [DSH Go and other mobile clients](docs/dsh-go.en.md) for the client-specific entry points. The graphical companion lives inside the DSH Web page or Desktop window.
+See [DSH Go and other mobile clients](docs/dsh-go.en.md) for the client-specific entry points.
 
 ### Test with the official DeepSeek API
 

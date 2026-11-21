@@ -2,3 +2,4 @@ node_modules/
 work/
 *.log
 .env*
+lib/native/AttuneDesktop.exe

@@ -4,9 +4,17 @@
 
 **偶尔玩一道趣味小测试，让你的 DSH 大肥鱼越来越懂你。**
 
-闲下来，点点角落里的大肥鱼女仆，陪她玩一道默契题。题目由 DSH 根据聊天情境临时生成：可以像网上的心理小测试一样，从日常情境了解你；也可以直接问，你喜欢怎样被回应。
+从 DeepSeek Harness 侧栏打开默契小屋，或在 Windows 桌宠上右键点 **默契答题**。题目由 DSH 按当前聊天情境临时生成，可以从一个日常情境聊起，也可以直接问你喜欢怎样被回应。
 
 选完以后，先看看她有没有理解对，再决定记不记住。你确认过的偏好会用于后续聊天，让大肥鱼慢慢找到和你相处的方式。小本本里的每一条都能纠正、删除，也能一起忘记答题依据。
+
+## 0.4.0 · Windows 桌宠
+
+桌宠悬浮在 Windows 桌面，可以拖到顺手的位置。双击回到 DeepSeek Harness，右键可查看余额、默契答题和检查更新。开启气泡闲聊后，它会偶尔说句话。
+
+桌宠下方同时显示 DeepSeek Flash 的两档输出价，每百万 tokens 峰时 ¥8、谷时 ¥4，并按北京时间高亮当前时段。**查看余额**使用 DeepSeek Harness 中已登录的 DeepSeek 账户或已配置的官方 API Key。打开默契小屋后，也可以在小本本里显示或隐藏桌宠。[桌宠操作和计价说明](docs/desktop-companion.md)
+
+![Windows 桌宠实拍，当前谷时价格高亮](docs/images/desktop-pet-040.jpg)
 
 ## 了解你喜欢怎样被回应
 
@@ -38,9 +46,9 @@
 
 ## 0.2.1 · 换上你喜欢的形象
 
-这次给小屋加上了女仆桌宠、轻动画、「教我怎么问」语气学习，也开放了自定义形象上传。可以陪大肥鱼玩小测试，也可以换成自己喜欢的角色。
+默契小屋支持轻动画、「教我怎么问」语气学习和自定义形象上传。可以陪大肥鱼玩小测试，也可以换成自己喜欢的角色。
 
-- **角落里的大肥鱼**：点开进入小屋，可收起、左右换位置；待机轻摆、出题歪头、确认后开心跃起。动画可关闭，也遵循系统减少动态效果设置。
+- **小屋里的动画**：出题时歪头思考，确认后开心跃起。动画可关闭，也遵循系统减少动态效果设置。
 - **定制形象**：上传自己的 PNG、JPG 或 WebP 图片，预览后保存；待机形象必选，也可单独配上思考和开心形象。未配表情时继续使用自己的待机图。形象保存在 DSH 宿主，可恢复默认。详见[定制形象](docs/custom-appearance.md)。
 - **教我怎么问**：题目由当前 DSH 模型临时创作，了解你喜欢的语气、称呼和邀请方式。选择只产生候选；确认后，下次出题才参考它。「主人」也是可选偏好。语气规则可在小本本纠正、删除。
 - **两种偏好各有用途**：普通偏好用于 DSH 的相关对话；「我的提问语气」只用于本插件生成题目，不注入普通 DSH 对话。图形和文字入口共用确认与遗忘逻辑。
@@ -53,7 +61,7 @@
 
 完整步骤、图片大小和各端入口见[自定义形象说明](docs/custom-appearance.md)。
 
-电脑 Web/标准 Desktop 插件页面显示**DSH 窗口内桌宠**；手机 Web 使用紧凑角色区和全屏小屋。DSH Go 原生面板提供语气测试及角色状态文案，界面能力由客户端决定。DSHA、Whaleness 在加载标准 Web 插件时使用同一界面，其余入口保留 `/attune` 命令。此版没有创建 Windows 系统桌面窗口或手机跨 App 悬浮窗，各原生客户端仍需真机验收。参见 [移动端接入说明](docs/dsh-go.md)。
+电脑 Web 和 Desktop 可从侧栏打开默契小屋。手机 Web 使用全屏小屋，DSH Go 原生面板提供语气测试及角色状态文案。加载标准 Web 插件的 DSHA、Whaleness 可使用同一界面，其余入口使用 `/attune` 命令。参见 [移动端接入说明](docs/dsh-go.md)。
 
 女仆素材来自 [SlimeNull / Chubby Whale](https://github.com/SlimeNull/ChubbyWhale)，图片按 CC BY-NC-SA 4.0 分发，代码沿用 MIT。署名与素材范围见 [ASSETS-NOTICE.md](ASSETS-NOTICE.md)。素材随包提供，展示时不访问图片 CDN。
 
@@ -61,12 +69,12 @@
 
 ## 安装
 
-DSH 0.2.1-rc.1 至 0.2.x 的插件接口为目标。0.1.0 已在 Windows 和 Linux 的 DSH 0.2.2-rc.1 Web profile 验证 npm 安装和卸载，真模型测试见下文。运行新版 DSH 时以其自身 Node 要求为准。插件使用 JavaScript、JSON 和 WebP 图片，无安装脚本或原生模块。生成小测试会调用你在 DSH 中配置的默认模型，产生相应模型用量；也可在插件配置中设置 `generatorProvider`、`generatorModel`。
+兼容目标为 DSH 0.2.1-rc.1 至 0.2.x 的插件接口。Windows 桌宠的组件随 npm 包分发，已在 Windows Desktop 0.2.2-rc.5 验证加载。生成小测试会调用你在 DSH 中配置的默认模型，产生相应模型用量。可在插件配置中设置 `generatorProvider` 和 `generatorModel`。
 
 在实际运行会话的 DSH 宿主上从 [npm](https://www.npmjs.com/package/dsh-attune) 安装本包，并重启宿主：
 
 ```text
-dsh plugin --profile web add dsh-attune@0.3.0
+dsh plugin --profile web add dsh-attune@0.4.0
 ```
 
 官方 Desktop 使用它自己的插件管理页，或用 Desktop 自带命令安装到 `desktop` profile。DSHA、DSH Go 手机本机引擎安装到其实际使用的 `web` profile；Whaleness 使用电脑宿主上的安装。安装到一个 profile 不会自动启用其他 profile。
@@ -81,7 +89,7 @@ dsh plugin --profile web remove dsh-attune
 
 操作后重启该宿主。`dsh plugin` 会将命令交给 pnpm；普通 CLI 需要 pnpm 在 PATH 中。其他 profile 需将 `web` 换成实际名称。Windows 上已在 DSH 0.2.2-rc.1 的隔离 Web profile 验证安装与卸载。
 
-官方 Desktop 可使用应用中的插件管理页移除。使用命令行时，需先至少启动一次 Desktop 以初始化 profile，然后完全退出 Desktop；使用由 Desktop 安装的 `dsh` 命令运行 `dsh plugin --profile desktop remove dsh-attune`，再重新打开 Desktop。普通 npm 版 `dsh` 不能管理 Desktop profile；具体 Desktop 版本与本插件的实机操作仍待验。详见 [DSH 官方 CLI](https://github.com/deepseek-ai/deepseek-harness/blob/master/apps/cli/reference/README.md) 和 [Desktop 文档](https://github.com/deepseek-ai/deepseek-harness/blob/master/apps/desktop/README.md)。
+官方 Desktop 可使用应用中的插件管理页移除。使用命令行时，先启动一次 Desktop 以初始化 profile，再完全退出。使用 Desktop 随附的 `dsh` 运行 `dsh plugin --profile desktop remove dsh-attune` 后重新打开。详见 [DSH 官方 CLI](https://github.com/deepseek-ai/deepseek-harness/blob/master/apps/cli/reference/README.md) 和 [Desktop 文档](https://github.com/deepseek-ai/deepseek-harness/blob/master/apps/desktop/README.md)。
 
 卸载插件不会自动删除偏好档案。默认文件为 `$DSH_HOME/storages/dsh-attune/state.json`；未设置 `DSH_HOME` 时，默认位于用户主目录的 `.dsh/storages/dsh-attune/state.json`。若配置过 `dataDir`，则位于该目录下的 `state.json`。如需彻底清除，请先停止使用同一档案的 DSH 宿主，核对实际路径后自行删除该插件数据；同一宿主上的其他 profile 可能共用它。
 
@@ -141,7 +149,7 @@ DSH Go 原生面板支持表单时，可以粘贴选段和补充后出一题。�
 
 | 入口 | 首版能力 | 验收状态 |
 |---|---|---|
-| DSH Web、官方 Desktop | 响应式卡片、规则管理、文字命令、上下文偏好 | Windows 和 Linux 已验证 npm 安装与卸载，Linux 已通过 DeepSeek 官方 API 出题和偏好流程实测，Desktop 应用待实机验收 |
+| DSH Web、官方 Desktop | 响应式卡片、规则管理、文字命令、上下文偏好，Windows Desktop 支持系统桌宠 | Windows 和 Linux 已验证 Web 安装与卸载。Linux 已使用 DeepSeek 官方 API 验证出题和偏好流程。Windows Desktop 0.2.2-rc.5 已验证桌宠加载。 |
 | DSH Go 手机本机 | 原生面板答题、确认、拒绝；文字命令纠正与删除；也可用 Web 界面 | 对照 DSH Go JSON Schema 和模拟桥接测试；真机待验 |
 | DSH Go SSH、中转 | 文字命令；网页岛仅在接入模式允许时使用 | 协议分析通过；真机待验 |
 | DSHA | 使用内置 DSH 的 Web 插件和文字命令 | 真机待验 |

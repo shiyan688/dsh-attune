@@ -15,6 +15,8 @@ The images are distributed under **Creative Commons Attributionâ€“NonCommercialâ
 
 The supplied WebP files retain the original bytes. Only the filenames were changed. Runtime display scaling, CSS movement and state changes do not alter the stored artwork. Any inline data-URL copies of these images in the browser bundle retain this same license and attribution. No source code from Chubby Whale is included.
 
+The Windows desk pet embeds PNG versions of these sprites. Its tray icon uses a scaled copy of the idle sprite. These formats carry the same attribution and license.
+
 | Local file | Upstream sprite | Visual state |
 | --- | --- | --- |
 | `lib/assets/maid-idle.webp` | `idle.webp` | Neutral greeting / idle |
