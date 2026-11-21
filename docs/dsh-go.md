@@ -46,16 +46,16 @@
 
 [DSHA](https://github.com/DSH-APP/DSHA) 在 Android 本地运行 DSH，并显示 Web UI；应把插件安装到其实际启动的 Web profile，验证预构建 JS 在所捆绑内核运行，手机后台关闭/重启后状态仍在。电脑 Web 与官方 Desktop 使用同一 Web client 插件，但各 profile 必须分别安装/启用。Web 端 API 通过宿主认证连接，部署在子路径或桌面自定义 origin 时不构造固定 localhost 地址。
 
-### 小桌宠在哪些界面出现
+### 答题界面与 Windows 桌宠
 
 | 界面 | 呈现方式 | 提问语气学习 |
 |---|---|---|
-| DSH Web、官方 Desktop 的 Web 插件界面 | DSH 窗口里的女仆小桌宠，点开测试，带轻动画 | 图形界面与文字命令 |
-| DSHA 加载的标准 Web UI | 页面内小桌宠，适配触屏 | 图形界面与文字命令 |
+| DSH Web、官方 Desktop 的插件界面 | 从侧栏打开默契小屋，答题页带角色与轻动画 | 图形界面与文字命令 |
+| DSHA 加载的标准 Web UI | 适配触屏的默契小屋 | 图形界面与文字命令 |
 | DSH Go 原生面板 | 原生卡片、小鱼提示与按钮，遵循 App 支持的 JSON 组件 | 「教我怎么问」与文字命令 |
 | Whaleness、DSH Go SSH／中转 | 宿主返回的文字测试 | `/attune tone`，再确认／纠正／删除 |
 
-这里的 Web 小桌宠使用 DSH 的 `shell.overlay` 插槽，活动范围是当前 DSH 页面／窗口；最小化窗口后不会继续显示在系统桌面上。Android／iOS 原生面板也没有跨 App 悬浮宠物或任意 CSS 动画。上述呈现范围依据宿主接口划分，真实设备的动作与布局仍按下列验收表核实。
+Windows 版官方 Desktop 支持插件自带的系统桌宠，双击可以回到 DeepSeek Harness。[Windows 桌宠说明](desktop-companion.md)
 
 ## 发布前的实测记录
 

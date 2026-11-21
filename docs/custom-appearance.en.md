@@ -2,7 +2,7 @@
 
 [简体中文](custom-appearance.md) · [English README](../README.en.md)
 
-From Attune, open **My preferences → Customize appearance** to change the companion in the corner and in the quiz panel.
+From Attune, open **My preferences → Customize appearance** to change the character shown in quizzes and on the Windows desktop.
 
 ![The three appearance states in the Attune editor](images/custom-appearance.jpg)
 
@@ -17,7 +17,7 @@ Each source image can be up to 5 MiB and 4,096 pixels in either dimension. The W
 
 ## Where images are saved
 
-The current DSH host stores them in `appearance.json` in the plugin's data directory. Refresh any other Web client connected to that host to use the same images. Companion position, visibility, and animation preferences are local to each client. Uploaded images are used for display.
+The current DSH host stores them in `appearance.json` in the plugin's data directory. Refresh any other Web client connected to that host to use the same images. The Windows pet's position, visibility, and animation settings are saved locally. Uploaded images are used for display.
 
 ## Client support
 

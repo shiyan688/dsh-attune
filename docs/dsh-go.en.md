@@ -30,7 +30,7 @@ Review the proposal after answering and choose which personas should remember it
 
 | Client | Companion | Tone preferences |
 | --- | --- | --- |
-| DSH Web and official Desktop | Animated companion inside the DSH window | **Teach me how to ask** and `/attune tone` |
+| DSH Web and official Desktop | Character and animations in the quiz panel, plus a [desktop pet on Windows](desktop-companion.md) | **Teach me how to ask** and `/attune tone` |
 | DSHA with standard Web UI | Companion within the touch-friendly Web panel | Web controls and slash commands |
 | DSH Go native panel | Companion status messages, cards, and buttons | Tone quiz and slash commands |
 | Whaleness and command-only connections | Text-based interaction | `/attune tone` followed by confirm, correct, or delete |
